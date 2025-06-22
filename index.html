@@ -118,7 +118,8 @@
     const formData = new FormData();
     const fileInput = document.getElementById("fileInput");
     if (!fileInput.files.length) {
-        alert("Por favor, selecciona un archivo.");
+        // Usar un div de mensaje en lugar de alert()
+        displayMessage("Por favor, selecciona un archivo.");
         return;
     }
     formData.append("file", fileInput.files[0]);
@@ -173,11 +174,45 @@
         // Rellenar con los datos normales
         kpiOutput.textContent = data.p_t;
         comparisonOutput.textContent = data.hipotesis;
-        testsUsedOutput.textContent = data['pruebas utilizadas'];
+        // Cambio aquí: Acceder con guion bajo (_)
+        testsUsedOutput.textContent = data.pruebas_utilizadas;
         detailedHypothesisOutput.textContent = data.detalle_hipotesis;
       }
     })
-    .catch(err => alert("Error al procesar el archivo: " + err.message));
+    .catch(err => displayMessage("Error al procesar el archivo: " + err.message)); // Usar displayMessage
+  }
+
+  // Función para mostrar mensajes al usuario (reemplazo de alert)
+  function displayMessage(message, type = 'error') {
+    let messageBox = document.getElementById('messageBox');
+    if (!messageBox) {
+      messageBox = document.createElement('div');
+      messageBox.id = 'messageBox';
+      document.body.appendChild(messageBox);
+    }
+    messageBox.textContent = message;
+    messageBox.className = type; // Puedes añadir clases CSS para diferentes tipos de mensajes (error, éxito)
+    messageBox.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ffdddd;
+      color: #d8000c;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    `;
+    setTimeout(() => {
+      messageBox.style.opacity = 1;
+    }, 10); // Pequeño retraso para la transición
+    setTimeout(() => {
+      messageBox.style.opacity = 0;
+      messageBox.addEventListener('transitionend', () => messageBox.remove(), {once: true});
+    }, 5000); // El mensaje desaparece después de 5 segundos
   }
 </script>
 
