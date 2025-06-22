@@ -9,10 +9,12 @@ CORS(app)
 
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-STANDARD_MEAN = 14.68785011  
+# Eliminado el espacio no estándar al final de la línea
+STANDARD_MEAN = 14.68785011
 
 @app.route('/')
 def index():
+    # Flask buscará 'index.html' dentro de la carpeta 'templates/'
     return render_template('index.html')
 
 @app.route('/calcular', methods=['POST'])
@@ -24,6 +26,8 @@ def calcular():
     if file.filename == '':
         return jsonify({'error': 'Nombre de archivo vacío'}), 400
 
+    # Asegura que la carpeta 'uploads' exista.
+    # Los archivos aquí no son persistentes en el plan gratuito de Render.
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(filepath)
@@ -34,9 +38,10 @@ def calcular():
         else:
             df = pd.read_excel(filepath, sheet_name=0)
 
+        # Asegúrate de que la primera columna sea numérica y maneja valores nulos
         data = df.iloc[:, 0].dropna().astype(float)
 
-        # Prueba de normalidad
+        # Prueba de normalidad (Kolmogorov-Smirnov)
         stat, p_normal = kstest(data, 'norm', args=(data.mean(), data.std()))
 
         # *************** MODIFICACIÓN AQUÍ ***************
@@ -45,7 +50,7 @@ def calcular():
                 'normal': False,
                 'p_t': None, # No se calculó la prueba t
                 'hipotesis': "Los datos NO son normales, no se puede realizar la prueba T-student.",
-                'pruebas utilizadas': f"Kolmogorov-Smirnov p={p_normal:.4f} (Datos no normales)",
+                'pruebas_utilizadas': f"Kolmogorov-Smirnov p={p_normal:.4f} (Datos no normales)",
                 'detalle_hipotesis': "No aplica al no cumplir el supuesto de normalidad."
             }
             # Opcional: imprimir para depuración incluso si no es normal
@@ -67,7 +72,7 @@ def calcular():
                 if p_t < 0.05 else
                 "No existe diferencia significativa entre los solventes"
             ),
-            'pruebas utilizadas': f"Kolmogorov-Smirnov p={p_normal:.4f}, T-student para una muestra de una cola p={p_t:.4f}",
+            'pruebas_utilizadas': f"Kolmogorov-Smirnov p={p_normal:.4f}, T-student para una muestra de una cola p={p_t:.4f}",
             'detalle_hipotesis': """H0: El promedio del nuevo solvente es menor o igual que el del estándar (Etanol 70)
         H1: El promedio del nuevo solvente es mayor que el del estándar (Etanol 70)"""
         }
@@ -78,11 +83,17 @@ def calcular():
 
         return jsonify(resultado)
 
-
     except Exception as e:
         # Asegúrate de que el frontend maneje este error adecuadamente
+        # Registra el error completo para depuración
+        import traceback
         print(f"Error en calcular: {str(e)}")
+        print(traceback.format_exc()) # Esto imprimirá el traceback completo
         return jsonify({'error': str(e)}), 500
 
+# Este bloque solo se ejecuta cuando ejecutas app.py directamente (no con Gunicorn en Render)
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Para despliegue en Render, Gunicorn gestiona el puerto.
+    # En desarrollo local, puedes usar un puerto fijo o de entorno.
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
