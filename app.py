@@ -63,9 +63,9 @@ def calcular():
             'normal': True,
             'p_t': round(p_t, 4),
             'hipotesis': (
-                "Se acepta H0"
-                if p_t < 0.05 else
                 "Se rechaza H0"
+                if p_t < 0.05 else
+                "Se acepta H0"
             ),
             'pruebas_utilizadas': f"Kolmogorov-Smirnov p={p_normal:.4f}, T-student para una muestra de una cola p={p_t:.4f}",
             'detalle_hipotesis': """H0: El promedio del nuevo solvente es menor o igual que el del estándar (Etanol 70)
