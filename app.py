@@ -61,7 +61,7 @@ def calcular():
 
         resultado = {
             'normal': True,
-            'p_t': round(p_t, 4),
+            'p_t': round(p_t, 4),0
             'hipotesis': (
                 "Se rechaza H0"
                 if p_t < 0.05 else
